@@ -148,6 +148,24 @@ function SideBar({
         return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (showUserMenu && !target.closest('.user-dropdown-container')) {
+                setShowUserMenu(false);
+            }
+        };
+
+        if (showUserMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showUserMenu]);
+
     const handleNavigation = (path: string) => {
         navigate(path);
         if (isMobile) {
@@ -215,7 +233,7 @@ function SideBar({
                                 <span
                                     className="text-lg font-bold cursor-pointer"
                                     onClick={() =>
-                                        handleNavigation("/play-xiangqi")
+                                        handleNavigation("/play/home")
                                     }
                                 >
                                     Xiangqi.com
@@ -232,7 +250,7 @@ function SideBar({
                         {/* Mobile Menu Items */}
                         <nav className="flex flex-col gap-2 mt-4">
                             <button
-                                onClick={() => handleNavigation("/play")}
+                                onClick={() => handleNavigation("/play/new")}
                                 className="flex items-center justify-between px-6 py-4 hover:bg-red-600 transition w-full cursor-pointer text-left"
                             >
                                 <div className="flex items-center gap-3">
@@ -287,12 +305,11 @@ function SideBar({
 
                     {/* Mobile Bottom Section */}
                     <div className="px-4 py-6">
-                        <div
-                            className="relative"
-                            onMouseEnter={() => setShowUserMenu(true)}
-                            onMouseLeave={() => setShowUserMenu(false)}
-                        >
-                            <div className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer">
+                        <div className="relative user-dropdown-container">
+                            <div 
+                                className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer"
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                            >
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold">
                                         {user
@@ -304,7 +321,7 @@ function SideBar({
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <ChevronDown className="w-4 h-4" />
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                                     <Bell className="w-5 h-5" />
                                 </div>
                             </div>
@@ -314,9 +331,10 @@ function SideBar({
                                 <div className="absolute bottom-full left-0 right-0 mb-2 bg-white text-gray-800 rounded-lg shadow-xl border z-70">
                                     <div className="py-2">
                                         <button
-                                            onClick={() =>
-                                                handleNavigation("/profile")
-                                            }
+                                            onClick={() => {
+                                                handleNavigation("/profile");
+                                                setShowUserMenu(false);
+                                            }}
                                             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition w-full text-left"
                                         >
                                             <User className="w-4 h-4" />
@@ -559,12 +577,11 @@ function SideBar({
 
                 {/* User Profile */}
                 {!isCollapsed ? (
-                    <div
-                        className="relative"
-                        onMouseEnter={() => setShowUserMenu(true)}
-                        onMouseLeave={() => setShowUserMenu(false)}
-                    >
-                        <div className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer">
+                    <div className="relative user-dropdown-container">
+                        <div 
+                            className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer"
+                            onClick={() => setShowUserMenu(!showUserMenu)}
+                        >
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold">
                                     {user ? getUserInitial(user.username) : "U"}
@@ -574,7 +591,7 @@ function SideBar({
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <ChevronDown className="w-4 h-4" />
+                                <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                                 <Bell className="w-5 h-5" />
                             </div>
                         </div>
@@ -584,9 +601,10 @@ function SideBar({
                             <div className="absolute bottom-full left-0 right-0 mb-2 bg-white text-gray-800 rounded-lg shadow-xl border z-70">
                                 <div className="py-2">
                                     <button
-                                        onClick={() =>
-                                            handleNavigation("/profile")
-                                        }
+                                        onClick={() => {
+                                            handleNavigation("/profile");
+                                            setShowUserMenu(false);
+                                        }}
                                         className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition w-full text-left"
                                     >
                                         <User className="w-4 h-4" />
