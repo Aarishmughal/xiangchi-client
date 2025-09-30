@@ -85,6 +85,8 @@ function SideBar({
 
     // Fetch current user on component mount
     useEffect(() => {
+        console.log("Sidebar mounted, fetching user...");
+        console.log("Cookies:", document.cookie);
         const fetchCurrentUser = async () => {
             try {
                 const accessToken = getCookie("accessToken");
@@ -100,6 +102,7 @@ function SideBar({
                 });
 
                 setUser(response.data.user || response.data);
+                console.log("Fetched user:", response.data);
             } catch (error: unknown) {
                 console.error("Failed to fetch user:", error);
                 if (
@@ -118,21 +121,11 @@ function SideBar({
     // Handle logout functionality
     const handleLogout = async () => {
         try {
+            console.log("Logging out, current cookies:", document.cookie);
             const accessToken = getCookie("accessToken");
-            const refreshToken = getCookie("refreshToken");
 
             if (accessToken) {
-                await axios.post(
-                    LOGOUT_ENDPOINT,
-                    {
-                        refreshToken,
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                    }
-                );
+                await axios.get(LOGOUT_ENDPOINT);
             }
         } catch (error) {
             console.error("Logout error:", error);
