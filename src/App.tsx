@@ -46,21 +46,21 @@ function App() {
                         />
                     </Route>
                     {/* Play Pages (with sidebar) */}
-                    <Route element={<PlayLayout />} />
-                    <Route path="/play/home" element={<Welcome />} />
-                    <Route path="/play" element={<Play />} />
-                    <Route path="/play-xiangqi" element={<PlayXiangqi />} />
-                    <Route
-                        path="/puzzles"
-                        element={
-                            <div className="p-8">
-                                <h1 className="text-2xl font-bold">
-                                    Puzzles Page
-                                </h1>
-                            </div>
-                        }
-                    />
-                    <Route />
+                    <Route element={<PlayLayout />}>
+                        <Route path="/play/home" element={<Welcome />} />
+                        <Route path="/play" element={<Play />} />
+                        <Route path="/play-xiangqi" element={<PlayXiangqi />} />
+                        <Route
+                            path="/puzzles"
+                            element={
+                                <div className="p-8">
+                                    <h1 className="text-2xl font-bold">
+                                        Puzzles Page
+                                    </h1>
+                                </div>
+                            }
+                        />
+                    </Route>
                     {/* <Route
                         path="/lessons"
                         element={
