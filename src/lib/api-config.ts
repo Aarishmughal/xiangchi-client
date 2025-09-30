@@ -6,10 +6,10 @@ export const API_CONFIG = {
             LOGIN: "/auth/login",
             SIGNUP: "/auth/signup",
             LOGOUT: "/auth/logout",
-            REFRESH: "/auth/refresh",
+            REFRESH: "/auth/refresh-token",
         },
         USER: {
-            PROFILE: "/user/profile",
+            PROFILE: "/user/me",
             UPDATE: "/user/update",
         },
         GAME: {

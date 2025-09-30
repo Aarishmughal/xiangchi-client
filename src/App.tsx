@@ -4,9 +4,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { buildApiUrl, API_CONFIG } from "./lib/api-config";
 import AuthLayout from "./layouts/AuthLayout";
 import MainLayout from "./layouts/MainLayout";
+import PlayLayout from "./layouts/PlayLayout";
 import LandingPage from "./components/LandingPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Welcome from "./components/Welcome";
+import Play from "./pages/Play";
+import PlayXiangqi from "./pages/PlayXiangqi";
 
 function App() {
     return (
@@ -42,8 +46,8 @@ function App() {
                         />
                     </Route>
                     {/* Play Pages (with sidebar) */}
-                    {/* <Route element={<PlayLayout />}>
-                    <Route path="/welcome" element={<Welcome />} />
+                    <Route element={<PlayLayout />} />
+                    <Route path="/play/home" element={<Welcome />} />
                     <Route path="/play" element={<Play />} />
                     <Route path="/play-xiangqi" element={<PlayXiangqi />} />
                     <Route
@@ -56,7 +60,8 @@ function App() {
                             </div>
                         }
                     />
-                    <Route
+                    <Route />
+                    {/* <Route
                         path="/lessons"
                         element={
                             <div className="p-8">
