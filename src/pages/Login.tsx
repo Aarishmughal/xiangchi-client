@@ -84,7 +84,7 @@ export default function Login({ API_URL }: { API_URL: string }) {
             toast.success("Login successful!");
 
             // Redirect to dashboard or home page
-            navigate("/play");
+            navigate("/play/home");
         } catch (error: unknown) {
             // Handle login errors
             let errorMessage = "Login failed. Please try again.";

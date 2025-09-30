@@ -48,7 +48,7 @@ function App() {
                     {/* Play Pages (with sidebar) */}
                     <Route element={<PlayLayout />}>
                         <Route path="/play/home" element={<Welcome />} />
-                        <Route path="/play" element={<Play />} />
+                        <Route path="/play/new" element={<Play />} />
                         <Route path="/play-xiangqi" element={<PlayXiangqi />} />
                         <Route
                             path="/puzzles"

@@ -378,9 +378,7 @@ function SideBar({
                         onMouseLeave={() => setShowPlaySubmenu(false)}
                     >
                         <button
-                            onClick={() =>
-                                handleNavigation("/play-xiangqi/play")
-                            }
+                            onClick={() => handleNavigation("/play/new")}
                             className="flex items-center justify-between px-6 py-3 hover:bg-red-600 transition w-full cursor-pointer"
                             title={isCollapsed ? "Play" : ""}
                         >
