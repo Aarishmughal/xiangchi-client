@@ -37,24 +37,18 @@ interface SidebarProps {
     LOGOUT_ENDPOINT: string;
 }
 
-// Cookie utility functions with debugging
-const getCookie = (name: string): string | null => {
-    console.log("🍪 All cookies available:", document.cookie);
-    console.log("🔍 Looking for cookie:", name);
+axios.defaults.withCredentials = true;
 
+// Cookie utility functions
+const getCookie = (name: string): string | null => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
 
     if (parts.length === 2) {
         const cookieValue = parts.pop()?.split(";").shift() || null;
-        console.log(
-            `✅ Found cookie ${name}:`,
-            cookieValue ? "Present" : "Empty"
-        );
         return cookieValue;
     }
 
-    console.log(`❌ Cookie ${name} not found`);
     return null;
 };
 
@@ -75,26 +69,10 @@ function SideBar({
 
     const handleTokenRefresh = async () => {
         try {
-            const refreshToken = getCookie("refreshToken");
-
-            console.log("🔄 Making refresh request with credentials...");
-            const response = await axios.post(
-                `${REFRESH_ENDPOINT}`,
-                {
-                    refreshToken,
-                },
-                {
-                    withCredentials: true, // Include httpOnly cookies
-                }
-            );
+            const response = await axios.post(`${REFRESH_ENDPOINT}`);
 
             if (response.data.accessToken) {
-                const userResponse = await axios.get(PROFILE_ENDPOINT, {
-                    headers: {
-                        Authorization: `Bearer ${response.data.accessToken}`,
-                    },
-                    withCredentials: true,
-                });
+                const userResponse = await axios.get(PROFILE_ENDPOINT);
                 setUser(userResponse.data.user || userResponse.data);
             }
         } catch (error) {
@@ -104,44 +82,26 @@ function SideBar({
 
     // Fetch current user on component mount
     useEffect(() => {
-        console.log("🚀 Sidebar mounted, fetching user...");
         const fetchCurrentUser = async () => {
             try {
                 const accessToken = getCookie("accessToken");
-                console.log(
-                    "🎫 Access token retrieved:",
-                    accessToken ? "Found" : "Not found"
-                );
-                console.log("Access token:", accessToken);
 
                 if (!accessToken) {
                     try {
-                        const response = await axios.get(PROFILE_ENDPOINT, {
-                            withCredentials: true, // This sends httpOnly cookies
-                        });
-                        console.log(
-                            "✅ User fetched with credentials:",
-                            response.data
-                        );
+                        const response = await axios.get(PROFILE_ENDPOINT);
+
                         setUser(response.data.user || response.data);
                         setLoading(false);
                         return;
-                    } catch (credError) {
-                        console.log(
-                            "❌ Credentials request failed:",
-                            credError
-                        );
+                    } catch {
                         setLoading(false);
                         return;
                     }
                 }
 
-                const response = await axios.get(PROFILE_ENDPOINT, {
-                    withCredentials: true, // Include cookies in request
-                });
+                const response = await axios.get(PROFILE_ENDPOINT);
 
                 setUser(response.data.user || response.data);
-                console.log("Fetched user:", response.data);
             } catch (error: unknown) {
                 console.error("Failed to fetch user:", error);
                 if (
@@ -160,38 +120,11 @@ function SideBar({
     // Handle logout functionality
     const handleLogout = async () => {
         try {
-            console.log("🚪 Logging out, current cookies:", document.cookie);
-
-            const accessToken = getCookie("accessToken");
-            const refreshToken = getCookie("refreshToken");
-
-            console.log("🎫 Tokens for logout:", {
-                accessToken: accessToken ? "Found" : "Not found",
-                refreshToken: refreshToken ? "Found" : "Not found",
-            });
-
             // Try logout request with credentials (works with httpOnly cookies)
-            console.log("🌐 Making logout request with credentials...");
-            await axios.post(
-                LOGOUT_ENDPOINT,
-                {
-                    refreshToken: refreshToken || undefined,
-                },
-                {
-                    headers: accessToken
-                        ? {
-                              Authorization: `Bearer ${accessToken}`,
-                          }
-                        : {},
-                    withCredentials: true, // Include httpOnly cookies
-                }
-            );
-
-            console.log("✅ Logout request successful");
+            await axios.get(LOGOUT_ENDPOINT);
         } catch (error) {
             console.error("❌ Logout error:", error);
         } finally {
-            console.log("🧹 Cleaning up user state and redirecting...");
             setUser(null);
             setShowUserMenu(false);
             toast.success("Logged out successfully");
