@@ -66,10 +66,19 @@ export default function Login({ API_URL }: { API_URL: string }) {
 
         try {
             // Replace with your actual API endpoint
-            await axios.post(API_URL, {
-                email: formData.email,
-                password: formData.password,
-            });
+            await axios.post(
+                API_URL,
+                {
+                    email: formData.email,
+                    password: formData.password,
+                },
+                {
+                    withCredentials: true,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
             // Handle successful login
             toast.success("Login successful!");
