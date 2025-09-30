@@ -37,14 +37,40 @@ interface SidebarProps {
     LOGOUT_ENDPOINT: string;
 }
 
-// Cookie utility functions
+// Cookie utility functions with debugging
 const getCookie = (name: string): string | null => {
+    console.log("🍪 All cookies available:", document.cookie);
+    console.log("🔍 Looking for cookie:", name);
+
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
+
     if (parts.length === 2) {
-        return parts.pop()?.split(";").shift() || null;
+        const cookieValue = parts.pop()?.split(";").shift() || null;
+        console.log(
+            `✅ Found cookie ${name}:`,
+            cookieValue ? "Present" : "Empty"
+        );
+        return cookieValue;
     }
+
+    console.log(`❌ Cookie ${name} not found`);
     return null;
+};
+
+// Alternative: Check if cookies are httpOnly by trying to access them
+const debugCookieAccess = () => {
+    console.log("🔬 Cookie Debug Info:");
+    console.log("- Document cookie string:", document.cookie);
+    console.log("- Cookie string length:", document.cookie.length);
+    console.log("- Attempting to access accessToken...");
+
+    // Try different cookie name variations
+    const variations = ["accessToken", "access_token", "authToken", "token"];
+    variations.forEach((name) => {
+        const cookie = getCookie(name);
+        console.log(`- ${name}:`, cookie ? "Found" : "Not found");
+    });
 };
 
 function SideBar({
@@ -66,15 +92,23 @@ function SideBar({
         try {
             const refreshToken = getCookie("refreshToken");
 
-            const response = await axios.post(`${REFRESH_ENDPOINT}`, {
-                refreshToken,
-            });
+            console.log("🔄 Making refresh request with credentials...");
+            const response = await axios.post(
+                `${REFRESH_ENDPOINT}`,
+                {
+                    refreshToken,
+                },
+                {
+                    withCredentials: true, // Include httpOnly cookies
+                }
+            );
 
             if (response.data.accessToken) {
                 const userResponse = await axios.get(PROFILE_ENDPOINT, {
                     headers: {
                         Authorization: `Bearer ${response.data.accessToken}`,
                     },
+                    withCredentials: true,
                 });
                 setUser(userResponse.data.user || userResponse.data);
             }
@@ -85,20 +119,51 @@ function SideBar({
 
     // Fetch current user on component mount
     useEffect(() => {
-        console.log("Sidebar mounted, fetching user...");
-        console.log("Cookies:", document.cookie);
+        console.log("🚀 Sidebar mounted, fetching user...");
+        debugCookieAccess();
+
         const fetchCurrentUser = async () => {
             try {
                 const accessToken = getCookie("accessToken");
+                console.log(
+                    "🎫 Access token retrieved:",
+                    accessToken ? "Found" : "Not found"
+                );
+
                 if (!accessToken) {
-                    setLoading(false);
-                    return;
+                    console.log(
+                        "⚠️ No access token, trying request with credentials anyway..."
+                    );
+
+                    // Try making request with credentials even without token
+                    // This will work if cookies are httpOnly
+                    try {
+                        const response = await axios.get(PROFILE_ENDPOINT, {
+                            withCredentials: true, // This sends httpOnly cookies
+                        });
+                        console.log(
+                            "✅ User fetched with credentials:",
+                            response.data
+                        );
+                        setUser(response.data.user || response.data);
+                        setLoading(false);
+                        return;
+                    } catch (credError) {
+                        console.log(
+                            "❌ Credentials request failed:",
+                            credError
+                        );
+                        setLoading(false);
+                        return;
+                    }
                 }
 
+                console.log("🌐 Making authenticated request with token...");
                 const response = await axios.get(PROFILE_ENDPOINT, {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
                     },
+                    withCredentials: true, // Include cookies in request
                 });
 
                 setUser(response.data.user || response.data);
@@ -121,15 +186,41 @@ function SideBar({
     // Handle logout functionality
     const handleLogout = async () => {
         try {
-            console.log("Logging out, current cookies:", document.cookie);
-            const accessToken = getCookie("accessToken");
+            console.log("🚪 Logging out, current cookies:", document.cookie);
+            debugCookieAccess();
 
-            if (accessToken) {
-                await axios.get(LOGOUT_ENDPOINT);
-            }
+            const accessToken = getCookie("accessToken");
+            const refreshToken = getCookie("refreshToken");
+
+            console.log("🎫 Tokens for logout:", {
+                accessToken: accessToken ? "Found" : "Not found",
+                refreshToken: refreshToken ? "Found" : "Not found",
+            });
+
+            // Try logout request with credentials (works with httpOnly cookies)
+            console.log("🌐 Making logout request with credentials...");
+            await axios.post(
+                LOGOUT_ENDPOINT,
+                {
+                    refreshToken: refreshToken || undefined,
+                },
+                {
+                    headers: accessToken
+                        ? {
+                              Authorization: `Bearer ${accessToken}`,
+                          }
+                        : {},
+                    withCredentials: true, // Include httpOnly cookies
+                }
+            );
+
+            console.log("✅ Logout request successful");
         } catch (error) {
-            console.error("Logout error:", error);
+            console.error("❌ Logout error:", error);
         } finally {
+            console.log("🧹 Cleaning up user state and redirecting...");
+            setUser(null);
+            setShowUserMenu(false);
             toast.success("Logged out successfully");
             navigate("/login");
         }
@@ -152,17 +243,17 @@ function SideBar({
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Element;
-            if (showUserMenu && !target.closest('.user-dropdown-container')) {
+            if (showUserMenu && !target.closest(".user-dropdown-container")) {
                 setShowUserMenu(false);
             }
         };
 
         if (showUserMenu) {
-            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener("mousedown", handleClickOutside);
         }
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showUserMenu]);
 
@@ -306,7 +397,7 @@ function SideBar({
                     {/* Mobile Bottom Section */}
                     <div className="px-4 py-6">
                         <div className="relative user-dropdown-container">
-                            <div 
+                            <div
                                 className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer"
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                             >
@@ -321,7 +412,11 @@ function SideBar({
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                                    <ChevronDown
+                                        className={`w-4 h-4 transition-transform ${
+                                            showUserMenu ? "rotate-180" : ""
+                                        }`}
+                                    />
                                     <Bell className="w-5 h-5" />
                                 </div>
                             </div>
@@ -578,7 +673,7 @@ function SideBar({
                 {/* User Profile */}
                 {!isCollapsed ? (
                     <div className="relative user-dropdown-container">
-                        <div 
+                        <div
                             className="flex items-center justify-between bg-red-600 px-3 py-2 rounded-lg cursor-pointer"
                             onClick={() => setShowUserMenu(!showUserMenu)}
                         >
@@ -591,7 +686,11 @@ function SideBar({
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                                <ChevronDown
+                                    className={`w-4 h-4 transition-transform ${
+                                        showUserMenu ? "rotate-180" : ""
+                                    }`}
+                                />
                                 <Bell className="w-5 h-5" />
                             </div>
                         </div>
