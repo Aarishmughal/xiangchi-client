@@ -58,21 +58,6 @@ const getCookie = (name: string): string | null => {
     return null;
 };
 
-// Alternative: Check if cookies are httpOnly by trying to access them
-const debugCookieAccess = () => {
-    console.log("🔬 Cookie Debug Info:");
-    console.log("- Document cookie string:", document.cookie);
-    console.log("- Cookie string length:", document.cookie.length);
-    console.log("- Attempting to access accessToken...");
-
-    // Try different cookie name variations
-    const variations = ["accessToken", "access_token", "authToken", "token"];
-    variations.forEach((name) => {
-        const cookie = getCookie(name);
-        console.log(`- ${name}:`, cookie ? "Found" : "Not found");
-    });
-};
-
 function SideBar({
     REFRESH_ENDPOINT,
     PROFILE_ENDPOINT,
@@ -120,8 +105,6 @@ function SideBar({
     // Fetch current user on component mount
     useEffect(() => {
         console.log("🚀 Sidebar mounted, fetching user...");
-        debugCookieAccess();
-
         const fetchCurrentUser = async () => {
             try {
                 const accessToken = getCookie("accessToken");
@@ -129,14 +112,9 @@ function SideBar({
                     "🎫 Access token retrieved:",
                     accessToken ? "Found" : "Not found"
                 );
+                console.log("Access token:", accessToken);
 
                 if (!accessToken) {
-                    console.log(
-                        "⚠️ No access token, trying request with credentials anyway..."
-                    );
-
-                    // Try making request with credentials even without token
-                    // This will work if cookies are httpOnly
                     try {
                         const response = await axios.get(PROFILE_ENDPOINT, {
                             withCredentials: true, // This sends httpOnly cookies
@@ -158,11 +136,7 @@ function SideBar({
                     }
                 }
 
-                console.log("🌐 Making authenticated request with token...");
                 const response = await axios.get(PROFILE_ENDPOINT, {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`,
-                    },
                     withCredentials: true, // Include cookies in request
                 });
 
@@ -187,7 +161,6 @@ function SideBar({
     const handleLogout = async () => {
         try {
             console.log("🚪 Logging out, current cookies:", document.cookie);
-            debugCookieAccess();
 
             const accessToken = getCookie("accessToken");
             const refreshToken = getCookie("refreshToken");
@@ -316,7 +289,7 @@ function SideBar({
                                 <div
                                     className="w-8 h-8 rounded-full bg-white text-red-700 flex items-center justify-center font-medium cursor-pointer"
                                     onClick={() =>
-                                        handleNavigation("/play-xiangqi")
+                                        handleNavigation("/play/home")
                                     }
                                 >
                                     相
@@ -466,14 +439,14 @@ function SideBar({
                 <div className="flex items-center gap-2 px-4 py-6">
                     <div
                         className="w-8 h-8 rounded-full bg-white text-red-700 flex items-center justify-center font-medium cursor-pointer"
-                        onClick={() => handleNavigation("/play-xiangqi")}
+                        onClick={() => handleNavigation("/play/home")}
                     >
                         相
                     </div>
                     {!isCollapsed && (
                         <span
                             className="text-lg font-bold cursor-pointer"
-                            onClick={() => handleNavigation("/play-xiangqi")}
+                            onClick={() => handleNavigation("/play/home")}
                         >
                             Xiangqi.com
                         </span>
@@ -510,9 +483,7 @@ function SideBar({
                                 <div className="py-2">
                                     <button
                                         onClick={() =>
-                                            handleNavigation(
-                                                "/play-xiangqi/play"
-                                            )
+                                            handleNavigation("/play")
                                         }
                                         className="flex items-center gap-3 px-6 py-3 hover:bg-red-50 transition w-full text-left cursor-pointer"
                                     >

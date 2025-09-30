@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Welcome from "./components/Welcome";
 import Play from "./pages/Play";
-import PlayXiangqi from "./pages/PlayXiangqi";
 
 function App() {
     return (
@@ -49,7 +48,6 @@ function App() {
                     <Route element={<PlayLayout />}>
                         <Route path="/play/home" element={<Welcome />} />
                         <Route path="/play/new" element={<Play />} />
-                        <Route path="/play-xiangqi" element={<PlayXiangqi />} />
                         <Route
                             path="/puzzles"
                             element={
