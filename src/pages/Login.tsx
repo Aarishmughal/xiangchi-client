@@ -66,7 +66,7 @@ export default function Login({ API_URL }: { API_URL: string }) {
 
         try {
             // Replace with your actual API endpoint
-            await axios.post(
+            const response = await axios.post(
                 API_URL,
                 {
                     email: formData.email,
@@ -80,8 +80,13 @@ export default function Login({ API_URL }: { API_URL: string }) {
                 }
             );
 
-            // Handle successful login
             toast.success("Login successful!");
+            localStorage.setItem("token", response.data.token);
+            localStorage.setItem("refreshToken", response.data.refreshToken);
+            axios.defaults.headers.common[
+                "Authorization"
+            ] = `Bearer ${response.data.token}`;
+            console.log(response.data);
 
             // Redirect to dashboard or home page
             navigate("/play/home");
