@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Welcome from "./components/Welcome";
 import Play from "./pages/Play";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
     return (
@@ -44,18 +45,34 @@ function App() {
                             }
                         />
                     </Route>
-                    {/* Play Pages (with sidebar) */}
+                    {/* Protected Play Pages (with sidebar) */}
                     <Route element={<PlayLayout />}>
-                        <Route path="/play/home" element={<Welcome />} />
-                        <Route path="/play/new" element={<Play />} />
+                        <Route
+                            path="/play/home"
+                            element={
+                                <ProtectedRoute>
+                                    <Welcome />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/play/new"
+                            element={
+                                <ProtectedRoute>
+                                    <Play />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="/puzzles"
                             element={
-                                <div className="p-8">
-                                    <h1 className="text-2xl font-bold">
-                                        Puzzles Page
-                                    </h1>
-                                </div>
+                                <ProtectedRoute>
+                                    <div className="p-8">
+                                        <h1 className="text-2xl font-bold">
+                                            Puzzles Page
+                                        </h1>
+                                    </div>
+                                </ProtectedRoute>
                             }
                         />
                     </Route>
