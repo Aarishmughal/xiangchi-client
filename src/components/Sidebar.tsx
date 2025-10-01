@@ -102,7 +102,11 @@ function SideBar({
 
                 // Fetch user profile with new token
                 const userResponse = await axios.get(PROFILE_ENDPOINT);
-                setUser(userResponse.data);
+                setUser(
+                    userResponse.data.data ||
+                        userResponse.data.user ||
+                        userResponse.data
+                );
             }
         } catch (error) {
             console.error("Token refresh failed:", error);
@@ -132,7 +136,9 @@ function SideBar({
 
                 const response = await axios.get(PROFILE_ENDPOINT);
                 console.log("User profile response:", response.data);
-                setUser(response.data.user || response.data);
+                setUser(
+                    response.data.data || response.data.user || response.data
+                );
             } catch (error: unknown) {
                 console.error("Failed to fetch user:", error);
                 if (
@@ -208,8 +214,6 @@ function SideBar({
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showUserMenu]);
-
-    // ...existing code...
 
     const handleNavigation = (path: string) => {
         navigate(path);
@@ -677,7 +681,7 @@ function SideBar({
                             className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold cursor-pointer hover:bg-gray-800 transition"
                             title={user ? user.username : "Guest"}
                         >
-                            {user ? user.username : "Guest"}
+                            {user ? user.username.charAt(0).toUpperCase() : "G"}
                         </div>
                     </div>
                 )}
