@@ -26,10 +26,27 @@ import { toast } from "react-toastify";
 import axios from "axios";
 
 type UserData = {
-    id: string;
+    _id: string;
     username: string;
     email: string;
-    avatar?: string;
+    role: string;
+    photo: string;
+    active: boolean;
+    mmr: number;
+    currentGame: string | null;
+    lastActive: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    stats: {
+        wins: number;
+        losses: number;
+        draws: number;
+    };
+    streak: {
+        current: number;
+        max: number;
+    };
 };
 interface SidebarProps {
     REFRESH_ENDPOINT: string;
@@ -85,7 +102,7 @@ function SideBar({
 
                 // Fetch user profile with new token
                 const userResponse = await axios.get(PROFILE_ENDPOINT);
-                setUser(userResponse.data.user || userResponse.data);
+                setUser(userResponse.data);
             }
         } catch (error) {
             console.error("Token refresh failed:", error);
@@ -114,6 +131,7 @@ function SideBar({
                 ] = `Bearer ${token}`;
 
                 const response = await axios.get(PROFILE_ENDPOINT);
+                console.log("User profile response:", response.data);
                 setUser(response.data.user || response.data);
             } catch (error: unknown) {
                 console.error("Failed to fetch user:", error);
@@ -198,10 +216,6 @@ function SideBar({
         if (isMobile) {
             setIsMobileMenuOpen(false);
         }
-    };
-
-    const getUserInitial = (username?: string) => {
-        return username ? username.charAt(0).toUpperCase() : "U";
     };
 
     if (loading) {
@@ -340,7 +354,9 @@ function SideBar({
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold">
                                         {user
-                                            ? getUserInitial(user.username)
+                                            ? user.username
+                                                  .charAt(0)
+                                                  .toUpperCase()
                                             : "U"}
                                     </div>
                                     <span className="font-medium">
@@ -613,7 +629,7 @@ function SideBar({
                         >
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold">
-                                    {user ? getUserInitial(user.username) : "U"}
+                                    {user ? user.username : "Guest"}
                                 </div>
                                 <span className="font-medium">
                                     {user ? user.username : "Guest"}
@@ -661,7 +677,7 @@ function SideBar({
                             className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-sm font-bold cursor-pointer hover:bg-gray-800 transition"
                             title={user ? user.username : "Guest"}
                         >
-                            {user ? getUserInitial(user.username) : "U"}
+                            {user ? user.username : "Guest"}
                         </div>
                     </div>
                 )}
