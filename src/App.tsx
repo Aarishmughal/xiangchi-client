@@ -24,26 +24,30 @@ function App() {
                     </Route>
                     {/* Auth Pages */}
                     <Route element={<AuthLayout />}>
-                        <Route
-                            path="/login"
-                            element={
-                                <Login
-                                    API_URL={buildApiUrl(
-                                        API_CONFIG.ENDPOINTS.AUTH.LOGIN
-                                    )}
-                                />
-                            }
-                        />
-                        <Route
-                            path="/signup"
-                            element={
-                                <Signup
-                                    API_URL={buildApiUrl(
-                                        API_CONFIG.ENDPOINTS.AUTH.SIGNUP
-                                    )}
-                                />
-                            }
-                        />
+                        <ProtectedRoute>
+                            <Route
+                                path="/login"
+                                element={
+                                    <Login
+                                        API_URL={buildApiUrl(
+                                            API_CONFIG.ENDPOINTS.AUTH.LOGIN
+                                        )}
+                                    />
+                                }
+                            />
+                        </ProtectedRoute>
+                        <ProtectedRoute>
+                            <Route
+                                path="/signup"
+                                element={
+                                    <Signup
+                                        API_URL={buildApiUrl(
+                                            API_CONFIG.ENDPOINTS.AUTH.SIGNUP
+                                        )}
+                                    />
+                                }
+                            />
+                        </ProtectedRoute>
                     </Route>
                     {/* Protected Play Pages (with sidebar) */}
                     <Route element={<PlayLayout />}>
