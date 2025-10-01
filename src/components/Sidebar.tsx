@@ -37,21 +37,6 @@ interface SidebarProps {
     LOGOUT_ENDPOINT: string;
 }
 
-axios.defaults.withCredentials = true;
-
-// Cookie utility functions
-const getCookie = (name: string): string | null => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-
-    if (parts.length === 2) {
-        const cookieValue = parts.pop()?.split(";").shift() || null;
-        return cookieValue;
-    }
-
-    return null;
-};
-
 function SideBar({
     REFRESH_ENDPOINT,
     PROFILE_ENDPOINT,
@@ -69,14 +54,46 @@ function SideBar({
 
     const handleTokenRefresh = async () => {
         try {
-            const response = await axios.post(`${REFRESH_ENDPOINT}`);
+            const refreshToken = localStorage.getItem("refreshToken");
+            if (!refreshToken) {
+                throw new Error("No refresh token available");
+            }
 
-            if (response.data.accessToken) {
+            const response = await axios.post(
+                REFRESH_ENDPOINT,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${refreshToken}`,
+                    },
+                }
+            );
+
+            if (response.data.token) {
+                localStorage.setItem("token", response.data.token);
+                if (response.data.refreshToken) {
+                    localStorage.setItem(
+                        "refreshToken",
+                        response.data.refreshToken
+                    );
+                }
+
+                // Update axios defaults
+                axios.defaults.headers.common[
+                    "Authorization"
+                ] = `Bearer ${response.data.token}`;
+
+                // Fetch user profile with new token
                 const userResponse = await axios.get(PROFILE_ENDPOINT);
                 setUser(userResponse.data.user || userResponse.data);
             }
         } catch (error) {
             console.error("Token refresh failed:", error);
+            // Clear tokens and redirect to login
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            delete axios.defaults.headers.common["Authorization"];
+            navigate("/login");
         }
     };
 
@@ -84,23 +101,19 @@ function SideBar({
     useEffect(() => {
         const fetchCurrentUser = async () => {
             try {
-                const accessToken = getCookie("accessToken");
+                const token = localStorage.getItem("token");
 
-                if (!accessToken) {
-                    try {
-                        const response = await axios.get(PROFILE_ENDPOINT);
-
-                        setUser(response.data.user || response.data);
-                        setLoading(false);
-                        return;
-                    } catch {
-                        setLoading(false);
-                        return;
-                    }
+                if (!token) {
+                    setLoading(false);
+                    return;
                 }
 
-                const response = await axios.get(PROFILE_ENDPOINT);
+                // Set authorization header
+                axios.defaults.headers.common[
+                    "Authorization"
+                ] = `Bearer ${token}`;
 
+                const response = await axios.get(PROFILE_ENDPOINT);
                 setUser(response.data.user || response.data);
             } catch (error: unknown) {
                 console.error("Failed to fetch user:", error);
@@ -109,22 +122,37 @@ function SideBar({
                     error.response?.status === 401
                 ) {
                     await handleTokenRefresh();
+                } else {
+                    // Clear tokens on other errors
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("refreshToken");
+                    delete axios.defaults.headers.common["Authorization"];
                 }
             } finally {
                 setLoading(false);
             }
         };
         fetchCurrentUser();
-    });
+    }, []);
 
     // Handle logout functionality
     const handleLogout = async () => {
         try {
-            // Try logout request with credentials (works with httpOnly cookies)
-            await axios.get(LOGOUT_ENDPOINT);
+            const token = localStorage.getItem("token");
+            if (token) {
+                await axios.get(LOGOUT_ENDPOINT, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
         } catch (error) {
             console.error("❌ Logout error:", error);
         } finally {
+            // Clear all tokens and user data
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            delete axios.defaults.headers.common["Authorization"];
             setUser(null);
             setShowUserMenu(false);
             toast.success("Logged out successfully");
@@ -162,6 +190,8 @@ function SideBar({
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showUserMenu]);
+
+    // ...existing code...
 
     const handleNavigation = (path: string) => {
         navigate(path);
