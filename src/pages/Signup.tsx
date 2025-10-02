@@ -97,7 +97,7 @@ export default function SignUp({ API_URL }: { API_URL: string }) {
             toast.success("Account created successfully!");
 
             // Redirect to dashboard or login page
-            navigate("/dashboard");
+            navigate("/play/home");
         } catch (error: unknown) {
             // Handle signup errors
             let errorMessage = "Signup failed. Please try again.";
