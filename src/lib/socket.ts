@@ -34,7 +34,10 @@ class SocketService {
     private playerColor: "red" | "black" | null = null;
 
     // Initialize socket connection
-    connect(serverUrl: string = "https://xiangchi-api.onrender.com"): Socket {
+    connect(
+        serverUrl: string = "https://xiangchi-api.onrender.com",
+        token?: string
+    ): Socket {
         if (this.socket?.connected) {
             return this.socket;
         }
@@ -42,6 +45,9 @@ class SocketService {
         this.socket = io(serverUrl, {
             transports: ["websocket", "polling"],
             autoConnect: true,
+            auth: {
+                token: token, // Pass JWT token for authentication
+            },
         });
 
         this.socket.on("connect", () => {
@@ -55,6 +61,11 @@ class SocketService {
 
         this.socket.on("connect_error", (error) => {
             console.error("Connection error:", error);
+        });
+
+        // Listen for xiangqi-specific connection confirmation
+        this.socket.on("xiangqi-connected", (data) => {
+            console.log("Xiangqi server connection:", data);
         });
 
         return this.socket;

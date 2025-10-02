@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { socketService } from "../lib/socket";
 import type { GameMove } from "../lib/socket";
@@ -131,18 +131,63 @@ function Game() {
         "single"
     );
 
+    // Helper function to ensure socket connection
+    const ensureSocketConnection = () => {
+        if (!socketService.isConnected()) {
+            const token =
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("accessToken") ||
+                undefined;
+            socketService.connect("https://xiangchi-api.onrender.com", token);
+        }
+    };
+
+    // Join room function
+    const joinRoom = useCallback(async (roomId: string) => {
+        try {
+            ensureSocketConnection();
+
+            const result = await socketService.joinRoom(roomId);
+            setPlayerColor(result.playerColor);
+            setOpponentConnected(result.roomInfo.players.length > 1);
+            setGameLog((prev) => [
+                ...prev,
+                `Joined room: ${roomId}`,
+                `You are playing as: ${result.playerColor}`,
+            ]);
+        } catch (error) {
+            setGameLog((prev) => [...prev, `Error joining room: ${error}`]);
+        }
+    }, []);
+
     // Initialize game based on URL parameters
     useEffect(() => {
         if (urlRoomId) {
-            // Multiplayer game - join the room
+            // Multiplayer game - ensure socket is connected first
             setGameMode("multiplayer");
-            joinRoom(urlRoomId);
+
+            // Make sure socket is connected before joining room
+            if (!socketService.isConnected()) {
+                const token =
+                    localStorage.getItem("accessToken") ||
+                    sessionStorage.getItem("accessToken") ||
+                    undefined;
+                socketService.connect(
+                    "https://xiangchi-api.onrender.com",
+                    token
+                );
+            }
+
+            // Add a small delay to ensure connection is established
+            setTimeout(() => {
+                joinRoom(urlRoomId);
+            }, 1000);
         } else {
             // Single player game
             setGameMode("single");
             setGameLog(["Single player game started"]);
         }
-    }, [urlRoomId]);
+    }, [urlRoomId, joinRoom]);
 
     // Set up socket listeners for multiplayer
     useEffect(() => {
@@ -179,6 +224,22 @@ function Game() {
                 setGameLog((prev) => [...prev, `Player left: ${playerId}`]);
                 setOpponentConnected(false);
             });
+
+            // Listen for connection errors
+            const socket = socketService.connect(
+                "https://xiangchi-api.onrender.com"
+            );
+            socket.on("connect_error", (error) => {
+                setGameLog((prev) => [...prev, `Connection error: ${error}`]);
+            });
+
+            socket.on("error", (error: string) => {
+                setGameLog((prev) => [...prev, `Game error: ${error}`]);
+            });
+
+            socket.on("room-error", (error: string) => {
+                setGameLog((prev) => [...prev, `Room error: ${error}`]);
+            });
         }
 
         return () => {
@@ -187,22 +248,6 @@ function Game() {
             }
         };
     }, [gameMode]);
-
-    // Join room function
-    const joinRoom = async (roomId: string) => {
-        try {
-            const result = await socketService.joinRoom(roomId);
-            setPlayerColor(result.playerColor);
-            setOpponentConnected(result.roomInfo.players.length > 1);
-            setGameLog((prev) => [
-                ...prev,
-                `Joined room: ${roomId}`,
-                `You are playing as: ${result.playerColor}`,
-            ]);
-        } catch (error) {
-            setGameLog((prev) => [...prev, `Error joining room: ${error}`]);
-        }
-    };
 
     // Get piece image path
     const getPieceImage = (piece: Piece): string => {

@@ -15,11 +15,26 @@ function Play() {
 
     // Initialize socket connection on component mount
     useEffect(() => {
-        const socket = socketService.connect();
+        // Get JWT token from localStorage (or wherever you store it after login)
+        const token =
+            localStorage.getItem("accessToken") ||
+            sessionStorage.getItem("accessToken") ||
+            undefined;
+
+        const socket = socketService.connect(
+            "https://xiangchi-api.onrender.com",
+            token
+        );
         setIsConnected(socketService.isConnected());
 
         // Listen for connection events
-        socket.on("xiangqi-connected", () => {
+        socket.on("connect", () => {
+            setIsConnected(true);
+            setConnectionError("");
+        });
+
+        socket.on("xiangqi-connected", (data) => {
+            console.log("Xiangqi connection status:", data);
             setIsConnected(true);
             setConnectionError("");
         });
