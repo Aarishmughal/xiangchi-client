@@ -90,6 +90,7 @@ export default function SignUp({ API_URL }: { API_URL: string }) {
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
+                passwordConfirm: formData.passwordConfirm,
             });
 
             // Handle successful signup
