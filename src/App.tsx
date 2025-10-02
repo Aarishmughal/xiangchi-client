@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Welcome from "./components/Welcome";
 import Play from "./pages/Play";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 function App() {
     return (
@@ -24,30 +25,30 @@ function App() {
                     </Route>
                     {/* Auth Pages */}
                     <Route element={<AuthLayout />}>
-                        <ProtectedRoute>
-                            <Route
-                                path="/login"
-                                element={
+                        <Route
+                            path="/login"
+                            element={
+                                <PublicRoute>
                                     <Login
                                         API_URL={buildApiUrl(
                                             API_CONFIG.ENDPOINTS.AUTH.LOGIN
                                         )}
                                     />
-                                }
-                            />
-                        </ProtectedRoute>
-                        <ProtectedRoute>
-                            <Route
-                                path="/signup"
-                                element={
+                                </PublicRoute>
+                            }
+                        />
+                        <Route
+                            path="/signup"
+                            element={
+                                <PublicRoute>
                                     <Signup
                                         API_URL={buildApiUrl(
                                             API_CONFIG.ENDPOINTS.AUTH.SIGNUP
                                         )}
                                     />
-                                }
-                            />
-                        </ProtectedRoute>
+                                </PublicRoute>
+                            }
+                        />
                     </Route>
                     {/* Protected Play Pages (with sidebar) */}
                     <Route element={<PlayLayout />}>
