@@ -12,6 +12,7 @@ import Welcome from "./components/Welcome";
 import Play from "./pages/Play";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import Game from "./pages/Game";
 
 function App() {
     return (
@@ -80,6 +81,8 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route path="/play/new/game" element={<Game />} />
+                        <Route path="/play/room/:roomId" element={<Game />} />
                     </Route>
                     {/* <Route
                         path="/lessons"
@@ -100,8 +103,7 @@ function App() {
                                 </h1>
                             </div>
                         }
-                    />
-                    <Route path="/play-xiangqi/play/game" element={<Game />} /> */}
+                    />*/}
 
                     {/* Submenu routes */}
                     {/* <Route path="/play-xiangqi/play" element={<Play />} />
