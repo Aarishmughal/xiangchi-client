@@ -19,7 +19,7 @@ function Play() {
         setIsConnected(socketService.isConnected());
 
         // Listen for connection events
-        socket.on("connect", () => {
+        socket.on("xiangqi-connected", () => {
             setIsConnected(true);
             setConnectionError("");
         });
