@@ -1,0 +1,263 @@
+/* Font Face Configurations for Headings and Paragraphs */
+
+/* Heading Font Styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: inherit;
+}
+
+/* Specific heading styles */
+h1 {
+    font-size: 2.5rem; /* 40px */
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.05em;
+}
+
+h2 {
+    font-size: 2rem; /* 32px */
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+}
+
+h3 {
+    font-size: 1.75rem; /* 28px */
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+}
+
+h4 {
+    font-size: 1.5rem; /* 24px */
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+h5 {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+h6 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+/* Paragraph and Text Styles */
+p,
+body {
+    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-size: 1rem; /* 16px */
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: inherit;
+}
+
+/* Text size variations */
+.text-xs {
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.4;
+}
+
+.text-sm {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5;
+}
+
+.text-base {
+    font-size: 1rem; /* 16px */
+    line-height: 1.6;
+}
+
+.text-lg {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.6;
+}
+
+.text-xl {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.6;
+}
+
+.text-2xl {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.5;
+}
+
+.text-3xl {
+    font-size: 1.875rem; /* 30px */
+    line-height: 1.4;
+}
+
+.text-4xl {
+    font-size: 2.25rem; /* 36px */
+    line-height: 1.3;
+}
+
+/* Font weight utilities */
+.font-light {
+    font-weight: 300;
+}
+
+.font-normal {
+    font-weight: 400;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.font-extrabold {
+    font-weight: 800;
+}
+
+/* Typography utility classes */
+.heading-primary {
+    font-family: "Poppins", sans-serif;
+    font-size: 3rem; /* 48px */
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.05em;
+}
+
+.heading-secondary {
+    font-family: "Poppins", sans-serif;
+    font-size: 2.25rem; /* 36px */
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+}
+
+.heading-tertiary {
+    font-family: "Poppins", sans-serif;
+    font-size: 1.875rem; /* 30px */
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.03em;
+}
+
+.text-lead {
+    font-size: 1.25rem; /* 20px */
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+}
+
+.text-muted {
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.text-subtle {
+    opacity: 0.6;
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+    h1,
+    .heading-primary {
+        font-size: 2rem; /* 32px */
+    }
+
+    h2,
+    .heading-secondary {
+        font-size: 1.75rem; /* 28px */
+    }
+
+    h3,
+    .heading-tertiary {
+        font-size: 1.5rem; /* 24px */
+    }
+
+    h4 {
+        font-size: 1.25rem; /* 20px */
+    }
+
+    h5 {
+        font-size: 1.125rem; /* 18px */
+    }
+
+    h6 {
+        font-size: 1rem; /* 16px */
+    }
+
+    .text-lead {
+        font-size: 1.125rem; /* 18px */
+    }
+
+    p {
+        font-size: 0.875rem; /* 14px */
+        line-height: 1.6;
+    }
+}
+
+/* Dark mode text adjustments */
+@media (prefers-color-scheme: dark) {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-weight: 600; /* Slightly lighter in dark mode */
+    }
+
+    p {
+        font-weight: 400;
+    }
+}
+
+/* Focus and accessibility improvements */
+h1:focus,
+h2:focus,
+h3:focus,
+h4:focus,
+h5:focus,
+h6:focus {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+
+    p {
+        orphans: 3;
+        widows: 3;
+    }
+}
