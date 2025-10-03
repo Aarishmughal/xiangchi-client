@@ -64,6 +64,12 @@ class SocketService {
         this.socket.on("connect", () => {
             console.log("Connected to server with ID:", this.socket?.id);
             this.playerId = this.socket?.id || null;
+
+            // If we were in a room before disconnect, re-join it
+            if (this.roomId && this.socket) {
+                console.log("Reconnected - re-joining room:", this.roomId);
+                this.socket.emit("join-room", { roomId: this.roomId });
+            }
         });
 
         this.socket.on("disconnect", () => {

@@ -240,6 +240,11 @@ function Game() {
                 console.log("Game component: Socket connected");
                 setSocketConnected(true);
                 setGameLog((prev) => [...prev, `Connected to server`]);
+
+                // Check if we need to update opponent status
+                if (urlRoomId) {
+                    setGameLog((prev) => [...prev, `Checking room status...`]);
+                }
             });
 
             socket.on("disconnect", () => {
