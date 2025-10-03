@@ -130,6 +130,7 @@ function Game() {
     const [gameMode, setGameMode] = useState<"single" | "multiplayer">(
         "single"
     );
+    const [socketConnected, setSocketConnected] = useState(false);
 
     // Helper function to ensure socket connection
     const ensureSocketConnection = () => {
@@ -948,6 +949,28 @@ function Game() {
                             <h3 className="text-lg font-semibold text-gray-800">
                                 Multiplayer Game
                             </h3>
+
+                            {/* Socket Connection Status */}
+                            <div className="flex items-center gap-2 text-sm">
+                                <div
+                                    className={`w-3 h-3 rounded-full ${
+                                        socketConnected
+                                            ? "bg-green-500"
+                                            : "bg-red-500"
+                                    }`}
+                                ></div>
+                                <span
+                                    className={
+                                        socketConnected
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                    }
+                                >
+                                    {socketConnected
+                                        ? "Socket Connected"
+                                        : "Socket Disconnected"}
+                                </span>
+                            </div>
 
                             {urlRoomId && (
                                 <div className="bg-gray-50 p-3 rounded border">
