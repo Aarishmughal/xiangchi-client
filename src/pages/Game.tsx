@@ -130,7 +130,6 @@ function Game() {
     const [gameMode, setGameMode] = useState<"single" | "multiplayer">(
         "single"
     );
-    const [socketConnected, setSocketConnected] = useState(false);
 
     // Helper function to ensure socket connection
     const ensureSocketConnection = () => {
