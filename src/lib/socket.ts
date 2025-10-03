@@ -126,9 +126,24 @@ class SocketService {
 
     // Send a move to other players in the room
     sendMove(move: Omit<GameMove, "playerId">): void {
+        console.log(
+            "sendMove called - roomId:",
+            this.roomId,
+            "playerId:",
+            this.playerId,
+            "connected:",
+            this.socket?.connected
+        );
+
         if (!this.socket || !this.roomId || !this.playerId) {
             console.error(
-                "Cannot send move: socket not connected or not in a room"
+                "Cannot send move: socket not connected or not in a room",
+                {
+                    hasSocket: !!this.socket,
+                    roomId: this.roomId,
+                    playerId: this.playerId,
+                    connected: this.socket?.connected,
+                }
             );
             return;
         }
@@ -138,10 +153,17 @@ class SocketService {
             playerId: this.playerId,
         };
 
+        console.log("Emitting game-move:", {
+            roomId: this.roomId,
+            move: moveWithPlayer,
+        });
+
         this.socket.emit("game-move", {
             roomId: this.roomId,
             move: moveWithPlayer,
         });
+
+        console.log("Move emitted successfully");
     }
 
     // Listen for moves from other players
@@ -151,7 +173,11 @@ class SocketService {
             return;
         }
 
-        this.socket.on("move-received", callback);
+        console.log("Registering move-received listener");
+        this.socket.on("move-received", (move: GameMove) => {
+            console.log("move-received event fired:", move);
+            callback(move);
+        });
     }
 
     // Listen for player joined events
