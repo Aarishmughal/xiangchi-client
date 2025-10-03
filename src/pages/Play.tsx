@@ -17,16 +17,21 @@ function Play() {
     useEffect(() => {
         // Get JWT token from localStorage (or wherever you store it after login)
         const token =
-            localStorage.getItem("token") ||
             localStorage.getItem("accessToken") ||
             sessionStorage.getItem("accessToken") ||
             undefined;
 
         const socket = socketService.connect(
-            import.meta.env.VITE_SOCKET_URL,
+            "https://xiangchi-api.onrender.com",
             token
         );
         setIsConnected(socketService.isConnected());
+
+        // Listen for connection events
+        socket.on("connect", () => {
+            setIsConnected(true);
+            setConnectionError("");
+        });
 
         socket.on("xiangqi-connected", (data) => {
             console.log("Xiangqi connection status:", data);
@@ -46,13 +51,8 @@ function Play() {
             console.error("Connection error:", error);
         });
 
-        // Listen for any socket errors
-        socket.on("error", (error: string) => {
-            console.error("Socket error:", error);
-            setConnectionError(error);
-        });
-
         return () => {
+            // Don't disconnect on unmount, keep connection for game
             socketService.removeAllListeners();
         };
     }, []);

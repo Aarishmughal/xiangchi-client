@@ -135,7 +135,6 @@ function Game() {
     const ensureSocketConnection = () => {
         if (!socketService.isConnected()) {
             const token =
-                localStorage.getItem("token") ||
                 localStorage.getItem("accessToken") ||
                 sessionStorage.getItem("accessToken") ||
                 undefined;
@@ -147,25 +146,6 @@ function Game() {
     const joinRoom = useCallback(async (roomId: string) => {
         try {
             ensureSocketConnection();
-
-            // Check if already in this room (e.g., after creating it)
-            const currentRoomId = socketService.getRoomId();
-            const currentColor = socketService.getPlayerColor();
-            
-            if (currentRoomId === roomId && currentColor) {
-                // Already in this room, just update local state
-                console.log("Already in room, not joining again. Room:", roomId, "Color:", currentColor);
-                setPlayerColor(currentColor);
-                // Initially set opponent as not connected (will be updated by socket events)
-                setOpponentConnected(false);
-                console.log("Initial opponent connected state set to: false");
-                setGameLog((prev) => [
-                    ...prev,
-                    `Already in room: ${roomId}`,
-                    `You are playing as: ${currentColor}`,
-                ]);
-                return;
-            }
 
             const result = await socketService.joinRoom(roomId);
             setPlayerColor(result.playerColor);
@@ -186,32 +166,9 @@ function Game() {
             // Multiplayer game - ensure socket is connected first
             setGameMode("multiplayer");
 
-            // Function to join room once connected
-            const attemptJoinRoom = () => {
-                if (socketService.isConnected()) {
-                    joinRoom(urlRoomId);
-                } else {
-                    // If not connected, wait for connection
-                    const socket = socketService.getSocket();
-                    if (socket) {
-                        const onConnect = () => {
-                            joinRoom(urlRoomId);
-                            socket.off("connect", onConnect);
-                        };
-                        socket.once("connect", onConnect);
-                        
-                        // Cleanup if component unmounts before connection
-                        return () => {
-                            socket.off("connect", onConnect);
-                        };
-                    }
-                }
-            };
-
             // Make sure socket is connected before joining room
             if (!socketService.isConnected()) {
                 const token =
-                    localStorage.getItem("token") ||
                     localStorage.getItem("accessToken") ||
                     sessionStorage.getItem("accessToken") ||
                     undefined;
@@ -221,10 +178,10 @@ function Game() {
                 );
             }
 
-            // Attempt to join room
-            const cleanup = attemptJoinRoom();
-            
-            return cleanup;
+            // Add a small delay to ensure connection is established
+            setTimeout(() => {
+                joinRoom(urlRoomId);
+            }, 1000);
         } else {
             // Single player game
             setGameMode("single");
@@ -256,13 +213,11 @@ function Game() {
 
             // Listen for player events
             socketService.onPlayerJoined((data) => {
-                console.log("Player joined event received:", data);
                 setGameLog((prev) => [
                     ...prev,
                     `Player joined: ${data.playerId}`,
                 ]);
                 setOpponentConnected(data.roomInfo.players.length > 1);
-                console.log("Opponent connected set to:", data.roomInfo.players.length > 1);
             });
 
             socketService.onPlayerLeft((playerId) => {
@@ -270,21 +225,21 @@ function Game() {
                 setOpponentConnected(false);
             });
 
-            // Get socket instance to attach error listeners
-            const socket = socketService.getSocket();
-            if (socket) {
-                socket.on("connect_error", (error) => {
-                    setGameLog((prev) => [...prev, `Connection error: ${error}`]);
-                });
+            // Listen for connection errors
+            const socket = socketService.connect(
+                "https://xiangchi-api.onrender.com"
+            );
+            socket.on("connect_error", (error) => {
+                setGameLog((prev) => [...prev, `Connection error: ${error}`]);
+            });
 
-                socket.on("error", (error: string) => {
-                    setGameLog((prev) => [...prev, `Game error: ${error}`]);
-                });
+            socket.on("error", (error: string) => {
+                setGameLog((prev) => [...prev, `Game error: ${error}`]);
+            });
 
-                socket.on("room-error", (error: string) => {
-                    setGameLog((prev) => [...prev, `Room error: ${error}`]);
-                });
-            }
+            socket.on("room-error", (error: string) => {
+                setGameLog((prev) => [...prev, `Room error: ${error}`]);
+            });
         }
 
         return () => {
@@ -316,10 +271,23 @@ function Game() {
         return imageMap[piece.type] || "";
     };
 
+    // Helper function to check if a piece should be interactive
+    const isPieceInteractive = (piece: Piece | null) => {
+        if (!piece) return false;
+
+        if (gameMode === "single") {
+            // In single player, only current player's pieces are interactive
+            return piece.color === currentPlayer;
+        } else {
+            // In multiplayer, only user's pieces are interactive and only on their turn
+            return piece.color === playerColor && currentPlayer === playerColor;
+        }
+    };
+
     // Handle piece click
     const handlePieceClick = (row: number, col: number) => {
         const piece = board[row][col];
-        if (piece && piece.color === currentPlayer) {
+        if (piece && isPieceInteractive(piece)) {
             setSelectedPiece({ row, col });
             setPieceNameInput(piece.type);
             setCoordinatesInput(""); // Clear coordinates when selecting new piece
@@ -334,9 +302,19 @@ function Game() {
     const handleSquareClick = (row: number, col: number) => {
         const piece = board[row][col];
 
-        if (piece && piece.color === currentPlayer) {
-            // Clicking on own piece - select it
+        if (piece && isPieceInteractive(piece)) {
+            // Clicking on own interactive piece - select it
             handlePieceClick(row, col);
+        } else if (piece && !isPieceInteractive(piece)) {
+            // Clicking on non-interactive piece - show message
+            setGameLog((prev) => [
+                ...prev,
+                gameMode === "multiplayer"
+                    ? currentPlayer !== playerColor
+                        ? "It's not your turn!"
+                        : "That's not your piece!"
+                    : "It's not that player's turn!",
+            ]);
         } else if (selectedPiece && (!piece || piece.color !== currentPlayer)) {
             // Clicking on empty square or enemy piece - set as destination
             setCoordinatesInput(`${row},${col}`);
@@ -680,8 +658,10 @@ function Game() {
                               selectedPiece?.row === rIdx &&
                               selectedPiece?.col === cIdx
                                   ? "shadow-lg scale-110 border-4"
-                                  : piece && piece.color === currentPlayer
+                                  : piece && isPieceInteractive(piece)
                                   ? "hover:bg-amber-100 hover:scale-105"
+                                  : piece && !isPieceInteractive(piece)
+                                  ? "cursor-not-allowed opacity-50"
                                   : !piece
                                   ? "hover:bg-amber-50"
                                   : "hover:bg-red-50"
@@ -715,7 +695,13 @@ function Game() {
                                                 <div className="relative w-full h-full">
                                                     {/* Piece Shadow for depth */}
                                                     <div
-                                                        className="absolute bg-black opacity-20 rounded-full blur-sm transform translate-x-0.5 translate-y-1"
+                                                        className={`absolute bg-black rounded-full blur-sm transform translate-x-0.5 translate-y-1 ${
+                                                            isPieceInteractive(
+                                                                piece
+                                                            )
+                                                                ? "opacity-20"
+                                                                : "opacity-10"
+                                                        }`}
                                                         style={{
                                                             width: "90%",
                                                             height: "90%",
@@ -730,7 +716,13 @@ function Game() {
                                                             piece
                                                         )}
                                                         alt={piece.type}
-                                                        className="pointer-events-none relative z-10 drop-shadow-lg"
+                                                        className={`pointer-events-none relative z-10 drop-shadow-lg transition-all duration-200 ${
+                                                            isPieceInteractive(
+                                                                piece
+                                                            )
+                                                                ? "opacity-100 saturate-100"
+                                                                : "opacity-50 saturate-50 grayscale-50"
+                                                        }`}
                                                         style={{
                                                             width: "90%",
                                                             height: "90%",
@@ -738,6 +730,15 @@ function Game() {
                                                         }}
                                                         draggable={false}
                                                     />
+
+                                                    {/* Overlay for non-interactive pieces */}
+                                                    {!isPieceInteractive(
+                                                        piece
+                                                    ) && (
+                                                        <div className="absolute inset-0 bg-gray-400 bg-opacity-30 rounded-full flex items-center justify-center">
+                                                            <div className="w-4 h-4 bg-gray-600 bg-opacity-60 rounded-full"></div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 

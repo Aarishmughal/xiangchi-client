@@ -38,28 +38,15 @@ class SocketService {
         serverUrl: string = "https://xiangchi-api.onrender.com",
         token?: string
     ): Socket {
-        // If socket exists and is connected, return it
         if (this.socket?.connected) {
-            console.log("Socket already connected, reusing existing connection");
             return this.socket;
         }
-
-        // If socket exists but is disconnected, clean it up without trying to disconnect again
-        if (this.socket) {
-            console.log("Socket exists but not connected, cleaning up...");
-            this.socket.removeAllListeners();
-            // Don't call disconnect() on an already disconnected socket
-            this.socket = null;
-        }
-
-        console.log("Creating new socket connection to:", serverUrl);
-        console.log("Auth token available:", !!token);
 
         this.socket = io(serverUrl, {
             transports: ["websocket", "polling"],
             autoConnect: true,
             auth: {
-                token: token,
+                token: token, // Pass JWT token for authentication
             },
         });
 
@@ -92,48 +79,23 @@ class SocketService {
                 return;
             }
 
-            console.log("Creating room - Socket connected:", this.socket.connected);
-            console.log("Socket ID:", this.socket.id);
-
-            let isResolved = false;
-
-            const roomCreatedHandler = (data: { roomId: string; playerColor: "red" | "black" }) => {
-                if (isResolved) return;
-                isResolved = true;
-                clearTimeout(timeoutId);
-                this.socket?.off("error", errorHandler);
-                
-                this.roomId = data.roomId;
-                this.playerColor = data.playerColor;
-                console.log(
-                    `Room created: ${data.roomId}, You are: ${data.playerColor}`
-                );
-                resolve(data);
-            };
-
-            const errorHandler = (error: string) => {
-                if (isResolved) return;
-                isResolved = true;
-                clearTimeout(timeoutId);
-                this.socket?.off("room-created", roomCreatedHandler);
-                
-                console.error("Socket error event:", error);
-                reject(new Error(error || "Failed to create room"));
-            };
-
-            const timeoutId = setTimeout(() => {
-                if (isResolved) return;
-                isResolved = true;
-                this.socket?.off("room-created", roomCreatedHandler);
-                this.socket?.off("error", errorHandler);
-                
-                reject(new Error("Room creation timeout - no response from server"));
-            }, 10000); // 10 second timeout
-
             this.socket.emit("create-room");
-            
-            this.socket.once("room-created", roomCreatedHandler);
-            this.socket.once("error", errorHandler);
+
+            this.socket.once(
+                "room-created",
+                (data: { roomId: string; playerColor: "red" | "black" }) => {
+                    this.roomId = data.roomId;
+                    this.playerColor = data.playerColor;
+                    console.log(
+                        `Room created: ${data.roomId}, You are: ${data.playerColor}`
+                    );
+                    resolve(data);
+                }
+            );
+
+            this.socket.once("error", (error: string) => {
+                reject(new Error(error));
+            });
         });
     }
 
@@ -249,10 +211,6 @@ class SocketService {
 
     isConnected(): boolean {
         return this.socket?.connected || false;
-    }
-
-    getSocket(): Socket | null {
-        return this.socket;
     }
 
     // Remove event listeners
