@@ -163,6 +163,23 @@ function Game() {
                 return;
             }
 
+            // Check if we're already in this room (e.g., we created it)
+            const currentRoomId = socketService.getRoomId();
+            const currentPlayerColor = socketService.getPlayerColor();
+
+            if (currentRoomId === roomId && currentPlayerColor) {
+                // We're already in this room, just update state
+                setPlayerColor(currentPlayerColor);
+                setGameLog((prev) => [
+                    ...prev,
+                    `Already in room: ${roomId}`,
+                    `You are playing as: ${currentPlayerColor}`,
+                    `Waiting for opponent to join...`,
+                ]);
+                return;
+            }
+
+            // Try to join the room
             const result = await socketService.joinRoom(roomId);
             setPlayerColor(result.playerColor);
             setOpponentConnected(result.roomInfo.players.length > 1);
