@@ -130,6 +130,7 @@ function Game() {
     const [gameMode, setGameMode] = useState<"single" | "multiplayer">(
         "single"
     );
+    const [socketConnected, setSocketConnected] = useState(false);
 
     // Helper function to ensure socket connection
     const ensureSocketConnection = () => {
@@ -146,6 +147,21 @@ function Game() {
     const joinRoom = useCallback(async (roomId: string) => {
         try {
             ensureSocketConnection();
+
+            // Wait for connection to be established
+            let retries = 0;
+            while (!socketService.isConnected() && retries < 10) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                retries++;
+            }
+
+            if (!socketService.isConnected()) {
+                setGameLog((prev) => [
+                    ...prev,
+                    `Failed to connect to server after ${retries * 500}ms`,
+                ]);
+                return;
+            }
 
             const result = await socketService.joinRoom(roomId);
             setPlayerColor(result.playerColor);
@@ -178,10 +194,8 @@ function Game() {
                 );
             }
 
-            // Add a small delay to ensure connection is established
-            setTimeout(() => {
-                joinRoom(urlRoomId);
-            }, 1000);
+            // Join room - the joinRoom function will wait for connection
+            joinRoom(urlRoomId);
         } else {
             // Single player game
             setGameMode("single");
@@ -192,6 +206,31 @@ function Game() {
     // Set up socket listeners for multiplayer
     useEffect(() => {
         if (gameMode === "multiplayer") {
+            const token =
+                localStorage.getItem("accessToken") ||
+                sessionStorage.getItem("accessToken") ||
+                undefined;
+            const socket = socketService.connect(
+                "https://xiangchi-api.onrender.com",
+                token
+            );
+
+            // Update connection status
+            setSocketConnected(socketService.isConnected());
+
+            // Monitor connection status
+            socket.on("connect", () => {
+                console.log("Game component: Socket connected");
+                setSocketConnected(true);
+                setGameLog((prev) => [...prev, `Connected to server`]);
+            });
+
+            socket.on("disconnect", () => {
+                console.log("Game component: Socket disconnected");
+                setSocketConnected(false);
+                setGameLog((prev) => [...prev, `Disconnected from server`]);
+            });
+
             // Listen for incoming moves
             socketService.onMove((move: GameMove) => {
                 setGameLog((prev) => [
@@ -226,11 +265,9 @@ function Game() {
             });
 
             // Listen for connection errors
-            const socket = socketService.connect(
-                "https://xiangchi-api.onrender.com"
-            );
             socket.on("connect_error", (error) => {
                 setGameLog((prev) => [...prev, `Connection error: ${error}`]);
+                setSocketConnected(false);
             });
 
             socket.on("error", (error: string) => {

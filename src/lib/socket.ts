@@ -38,9 +38,20 @@ class SocketService {
         serverUrl: string = "https://xiangchi-api.onrender.com",
         token?: string
     ): Socket {
+        // If socket exists and is connected, return it
         if (this.socket?.connected) {
+            console.log("Socket already connected, reusing connection");
             return this.socket;
         }
+
+        // If socket exists but is disconnected, disconnect it first
+        if (this.socket && !this.socket.connected) {
+            console.log("Socket exists but disconnected, cleaning up");
+            this.socket.disconnect();
+            this.socket = null;
+        }
+
+        console.log("Creating new socket connection with token:", !!token);
 
         this.socket = io(serverUrl, {
             transports: ["websocket", "polling"],
